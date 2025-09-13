@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Final
 
-Category = str
+Category = str //test
 Scope = str
 
 CATEGORIES: Final[set[Category]] = {
