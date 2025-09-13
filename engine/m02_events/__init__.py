@@ -2,6 +2,7 @@ from .constants import CATEGORIES, SCOPES, Category, Scope
 from .factories import make_red_alert_event, make_repair_event, make_sleep_event
 from .models import Event, new_ulid
 from .queue import EventQueue
+from .subscriptions import SubscriptionBroker
 
 __all__ = [
     "Event",
@@ -14,4 +15,5 @@ __all__ = [
     "make_repair_event",
     "make_sleep_event",
     "EventQueue",
+    "SubscriptionBroker",
 ]
