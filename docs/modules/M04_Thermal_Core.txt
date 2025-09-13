@@ -1,0 +1,214 @@
+# Starship Simulator — M04 Thermal Core (v0.2, Frozen)
+
+**Status:** Frozen
+
+> Defines the real‑time thermal simulation: nodes (modules, hull, armor, radiators), capacities, conductances, radiator rejection, and SRS coupling. Uses **banded c(T)/k(T)** per M05 categories (piecewise) with MVP fallbacks. Diagnostics panels use the async snapshot pattern; gameplay sim runs on the main loop.
+
+---
+
+## 1) Scope & Goals
+
+* Physically‑grounded but cheap: heat flows on a small network, not a voxel grid.
+* **Ship as thermal battery**: SRS can move heat module ↔ hull ↔ armor ↔ radiators; may pull heat back to consumers if needed.
+* Radiators **retract on RedAlert** (overridable); radiation is the only sink (deep space background).
+* Deterministic at 60 Hz; quiescent caching (no changes → coarser integration) per M02.
+
+---
+
+## 2) Thermal Graph
+
+**Nodes**
+
+* `Module[i]`: capacity `C_i` (kJ/°C), temperature `T_i`, emissivity `ε_i` (for local radiation to hull, usually small).
+* `Hull`: capacity from hull mass × c(T); temperature `T_h`.
+* `Armor`: capacity `C_a`; temp `T_a`.
+* `Radiator[j]`: area `A_j`, emissivity `ε_j`, temp `T_rj` (assume close to fluid temp), state `DEPLOYED/RETRACTED/DAMAGED`.
+
+**Edges (conductances)**
+
+* `G_{i→h}` (module↔hull), `G_{h↔a}` (hull↔armor), `G_{a↔rj}` (armor↔radiator j). Units: **kW/°C** (i.e., kJ/s per °C).
+
+---
+
+## 3) Capacities & Materials (tie to M05)
+
+* `C = m · c̄` where `c̄` is **band‑averaged c(T)** for the node’s material category.
+* MVP: single average `c̄` per category; Post‑MVP: piecewise segments (0–Hot–VeryHot bands).
+* Example averages (MVP defaults): electronics **0.9 kJ/kg·°C**, steel hull **0.5**, armor ceramic **0.8**; refine per M05.
+
+---
+
+## 4) Radiator Model
+
+* **Stefan–Boltzmann** radiation sink: `P_rad = ε σ A (T_skin^4 − T_bg^4)`; take `T_bg=3 K` ⇒ negligible. Use °K internally for radiation calc.
+* **Operating limits**: `T_skin ≤ T_max` (normal). Overdrive (post‑MVP).
+* **Deploy/Retraction**: `t_deploy = 4 s`, `t_retract = 3 s` (no rejection while retracted).
+* **Damage**: hole reduces effective `A` by its area fraction; `A_eff = A · (1 − damage_frac)`.
+* **Shadowing**: neglected MVP; Post‑MVP add view‑factor tweaks.
+
+### 4a) MVP Radiator Sizing via Hull‑Area Fraction (no radiator modules)
+
+* For MVP we **do not place radiator modules**. Instead, total radiator area is a fixed **fraction of hull surface area**:
+  `A_rad_total = f_rad · A_hull` (ellipsoid area from M03).
+* **Default `f_rad` by ship size** (tunable; clamp per hull if needed):
+  • `tiny_craft` **0.04** (4%)
+  • `light_vessel` **0.06** (6%)
+  • `medium_vessel` **0.07** (7%)
+  • `heavy_vessel` **0.08** (8%)
+  • `dreadnought_vessel` **0.10** (10%)
+* Treat `A_rad_total` as a single equivalent radiator for the sink calculation; distribute across panels visually later.
+* **Retracted** ⇒ `A_eff = 0`. **Damaged** ⇒ `A_eff = A_rad_total · (1 − damage_frac)`.
+* **Post‑MVP**: replace the fraction with **explicit radiator modules** that consume m² and SRS resources.
+
+---
+
+## 5) SRS ↔ Thermal Coupling
+
+* Each module exposes **thermal ports**: `heat_out_max_kW` and optionally `heat_in_max_kW` (if it can absorb heat).
+* SRS treats **thermal** as a resource flow that only routes via declared edges; **no hardlinks** for thermal.
+* Ship can **store** heat in hull/armor (thermal battery). SRS can later pull from hull to a consumer if a module needs heat (e.g., habitat warming) up to `heat_in_max_kW`.
+
+---
+
+## 6) Integration Algorithm (60 Hz)
+
+* **Per tick Δt** (s), we integrate heat balance for each node. Use **explicit Euler** MVP with clamped ΔT per step for stability; Post‑MVP: semi‑implicit for stiff edges.
+
+For a module `i`:
+
+```
+P_in   = Σ_k G_{k→i} · (T_k − T_i) + Q_active_i (from SRS loads)
+P_out  = 0 (local radiation ignored)       
+ΔQ     = (P_in − P_out) · Δt     // kJ
+T_i(t+Δ) = T_i(t) + ΔQ / C_i
+```
+
+Hull/Armor exchange similarly via `G_{h↔a}`. Radiators add a sink term:
+
+```
+P_rad_total = Σ_j state_j · ε_j · σ · A_eff_j · (T_rj^4 − T_bg^4)
+```
+
+Clamp per‑tick ΔT change: `|ΔT| ≤ 5 °C` (MVP). If exceeded, sub‑step internally.
+
+**Quiescence**: if temps change < 0.05 °C over 5 s and inputs stable, cache and sleep; wake on events from M02.
+
+---
+
+## 7) Alerts & Events (M02 tie‑in)
+
+* When a node crosses bands: emit `ThermalAlert:Warning/Critical` (module\_id, T, band).
+* `ThermalOvercap` if radiator capacity shortfalls persist > 10 s.
+* **RedAlert**: auto `Radiators:Retract` (unless overridden); emit `Radiators:StateChanged`.
+* `DamageEvent` perforating radiators adjusts `A_eff` and may leak working fluid (post‑MVP).
+
+---
+
+## 8) Defaults (MVP)
+
+* `σ = 5.670374419e−8 W/m²K⁴` (constant).
+* Radiator emissivity `ε=0.85`, `T_max_skin=900 °C` (1173 K).
+* Conductances (tunable): `G_{i→h}=0.8 kW/°C` compact mount, `1.5` hard mount; `G_{h↔a}=0.6 kW/°C`; `G_{a↔r}=1.2 kW/°C`.
+* Capacities (examples): module electronics (500 kg) → `C≈450 kJ/°C`; hull section (100 t steel) → `C≈50,000 kJ/°C`.
+
+---
+
+## 9) Sizing Guidelines (MVP)
+
+* **Hull‑fraction sizing**: compute `A_rad_total = f_rad · A_hull` per §4a and ship size.
+* **Maximum steady sink** at given skin temperature:
+  `P_rad_max ≈ ε · σ · A_rad_total · (T_skin^4 − T_bg^4)`.
+* Example: at `T_skin = 700 °C (973 K)`, `ε=0.85`, `f_rad=0.06` on a hull with `A_hull = 10,000 m²` ⇒
+  `A_rad_total = 600 m²` and `P_rad_max ≈ 0.85 · σ · 600 · 973^4 ≈ 29 MW`.
+  Scale linearly with area and strongly with temperature (∝ `T^4`).
+* **Transient buffering**: hull/armor battery can absorb `ΔQ = C_total · ΔT_allow`. With `C_total=5e4 kJ/°C` and `ΔT_allow=50 °C`, buffer ≈ **2.5 GJ**.
+
+---
+
+## 10) Acceptance Tests (MVP)
+
+1. **Steady refining**: with `f_rad` per ship size and `T_skin=700 °C`, computed `P_rad_max` exceeds a **600 kW** refinery load on the example light vessel → temps stabilize < 5 min; no `ThermalOvercap`.
+2. **RedAlert retract**: same load; **retract** radiators → `A_eff=0` ⇒ `ThermalOvercap` within **10–20 s**; hull temp rises; after 2 min, warning on modules nearest hull; re‑deploy restores within 5 min.
+3. **Laser hit impulse**: deposit **20 MJ** on hull panel over 0.5 s → local hull ΔT rises per `C_hull`; `ThermalAlert:Critical` fires if band breached; radiators recover if sized.
+4. **Quiescence**: with stable loads, thermal core sleeps; a `PowerPlantTrip` wakes; after restore and 10 s stability, sleeps again.
+
+---
+
+## 11) Material Bands & Defaults (MVP pinned)
+
+> Piecewise **banded** specific heat `c(T)` and conductivity `k(T)` per category. MVP uses **piecewise‑constant** values; post‑MVP may switch to linear within‑band.
+
+**Units**: `c` in **kJ/kg·°C**, `k` in **W/m·°C**. Temperature in **°C** (for bands); radiation uses **K** internally.
+
+### 11.1 Electronics (modules, avionics, batteries)
+
+| Band (°C)            |    c |    k | Notes                                       |
+| -------------------- | ---: | ---: | ------------------------------------------- |
+| **Cold** −40..0      | 0.80 | 0.80 | Derated conduction & capacity in cold start |
+| **Normal** 0..80     | 0.90 | 1.00 | Nominal operating window                    |
+| **Hot** 80..120      | 1.00 | 0.90 | Throttling likely                           |
+| **VeryHot** 120..150 | 1.10 | 0.80 | Approaching shutdown band                   |
+| **>150**             |    — |    — | Force shutdown (M08/M02 policy)             |
+
+### 11.2 Structural Steel (hull frames/skin)
+
+| Band (°C)               |    c |  k | Notes                           |
+| ----------------------- | ---: | -: | ------------------------------- |
+| **Cold** −150..0        | 0.40 | 50 | Brittle risk                    |
+| **Safe** 0..150         | 0.50 | 45 | Nominal                         |
+| **Hot** 150..600        | 0.55 | 35 | Strength reduction begins       |
+| **VeryHot** 600..900    | 0.60 | 25 | Serious softening               |
+| **Near‑melt** 900..1200 | 0.65 | 20 | Critical; tie to M05 alloy melt |
+
+### 11.3 Aluminum Structure (internal frames, panels if applicable)
+
+| Band (°C)            |    c |   k | Notes                         |
+| -------------------- | ---: | --: | ----------------------------- |
+| **Cold** −150..0     | 0.85 | 230 |                               |
+| **Safe** 0..120      | 0.90 | 205 |                               |
+| **Hot** 120..400     | 0.95 | 180 |                               |
+| **VeryHot** 400..600 | 1.05 | 150 | Close to softening            |
+| **Melt** >660        |    — |   — | Not simulated; guardrail only |
+
+### 11.4 Armor Ceramic / Composite (generic)
+
+| Band (°C)              |    c |  k | Notes                           |
+| ---------------------- | ---: | -: | ------------------------------- |
+| **Safe** 0..400        | 0.75 | 25 | Alumina/SiC composite effective |
+| **Hot** 400..1000      | 0.80 | 22 |                                 |
+| **VeryHot** 1000..1600 | 0.85 | 18 |                                 |
+
+### 11.5 Copper (radiator plumbing / heat pipes)
+
+| Band (°C)             |    c |   k | Notes             |
+| --------------------- | ---: | --: | ----------------- |
+| **Safe** 0..200       | 0.39 | 380 | High conductivity |
+| **Hot** 200..600      | 0.42 | 340 |                   |
+| **VeryHot** 600..1000 | 0.45 | 300 |                   |
+
+**Category mapping (M05 tie‑in)**
+
+* `module_electronics` → **Electronics**.
+* `hull_steel` → **Structural Steel**.
+* `hull_aluminum` → **Aluminum Structure** (if chosen).
+* `armor_ceramic` → **Armor Ceramic/Composite**.
+* `radiator_copper` (plumbing only) → **Copper**.
+
+**Lookup (MVP)**
+
+```
+function ck_for(category, T_c):
+  bands = TABLE[category]
+  for b in bands:
+    if T_c in b.range: return (b.c, b.k)
+  return last_band.values // clamp
+```
+
+---
+
+## 12) Notes & Post‑MVP
+
+* Switch to **within‑band interpolation** or full curves for `c(T), k(T)`.
+* Add **sun/shadow view‑factors**, **working fluid mass & leaks**, plume interference.
+* Replace hull‑fraction radiators with explicit **radiator modules** and directional rejection.
+* Validate bands against M05 alloy/ceramic selections and tune acceptance tests accordingly.
