@@ -53,6 +53,7 @@ class SubscriptionBroker:
             tie_break = seed_for(save_seed, actor_id, e.id).random()
             heapq.heappush(heap, (e.priority, deadline_ts, tie_break, e.id))
 
+
     def _next_event_id(self, actor_id: str) -> str | None:
         heap = self._personal.get(actor_id)
         if not heap:
