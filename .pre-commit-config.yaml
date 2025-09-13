@@ -13,7 +13,8 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        additional_dependencies: ["pydantic>=2"]
+        additional_dependencies: ["pydantic>=2", "typer"]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
