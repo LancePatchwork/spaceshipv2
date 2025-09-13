@@ -12,6 +12,7 @@ dependencies = [
     "structlog>=25.4.0",
     "typer>=0.17.4",
     "typing-extensions>=4.15.0",
+    "textual>=0.79.1",
 ]
 
 [tool.black]
