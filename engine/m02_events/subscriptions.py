@@ -70,7 +70,6 @@ class SubscriptionBroker:
                 return event_id
             # otherwise remove stale reference
             heapq.heappop(heap)
-
         return None
 
     def peek(self, actor_id: str) -> Event | None:
