@@ -1,0 +1,21 @@
+name: Keep PR ahead (prefer PR on conflicts)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+permissions:
+  contents: write
+jobs:
+  merge-base-into-head:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Merge base into head preferring PR
+        run: |
+          git config user.name  "automerge-bot"
+          git config user.email "automerge-bot@users.noreply.github.com"
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=0
+          git merge -X ours origin/${{ github.event.pull_request.base.ref }} -m "Auto-merge base into PR (prefer PR on conflicts)"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
