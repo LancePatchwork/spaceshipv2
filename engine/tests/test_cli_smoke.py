@@ -8,6 +8,8 @@ from pathlib import Path
 def run_cli(tmp_path: Path, *args: str) -> list[dict[str, object]]:
     env = os.environ.copy()
     env["EVT_STATE_FILE"] = str(tmp_path / "state.pkl")
+    # ensure engine package is importable when running tools/ scripts
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2])
     result = subprocess.run(
         [sys.executable, "tools/evt.py", *args],
         capture_output=True,
