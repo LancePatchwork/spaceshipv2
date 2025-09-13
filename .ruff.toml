@@ -1,0 +1,6 @@
+line-length = 100
+target-version = "py312"
+exclude = ["docs/**"]
+
+[lint]
+select = ["E", "F", "I"]
