@@ -1,31 +1,46 @@
 from __future__ import annotations
 
-from engine.lib.contracts import SaveStore
-from ui.core.actions import load_snapshot, save_last_snapshot
-from ui.core.contracts import SnapshotProvider
+from typing import Dict
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDockWidget, QMainWindow, QWidget
+
+from ui.core.registry import WidgetRegistry
 
 
-class MainWindow:
-    """Text-based main window stub with file menu actions."""
+class MainWindow(QMainWindow):
+    """Top-level application window with dockable panels."""
 
-    def __init__(self, store: SaveStore, provider: SnapshotProvider) -> None:
-        self._store = store
-        self._provider = provider
+    def __init__(self, registry: WidgetRegistry) -> None:
+        super().__init__()
+        self._registry = registry
+        self._dock_widgets: Dict[str, QDockWidget] = {}
 
-    def save_last_snapshot_action(self) -> None:
-        name = input("Save snapshot as: ")
-        try:
-            path = save_last_snapshot(self._store, self._provider, name)
-        except Exception as exc:  # pragma: no cover - UI feedback
-            print(f"Save failed: {exc}")
+        self.setWindowTitle("Starship Simulator")
+
+        view_menu = self.menuBar().addMenu("View")
+        self._panels_menu = view_menu.addMenu("Panels")
+
+        for name in ["Power", "Battery", "Life"]:
+            action = self._panels_menu.addAction(name)
+            action.triggered.connect(lambda checked=False, n=name: self.show_panel(n))
+
+    def add_panel(self, name: str, widget: QWidget) -> None:
+        """Dock ``widget`` under ``name`` if not already present."""
+
+        if name in self._dock_widgets:
             return
-        print(f"Snapshot saved to {path}")
+        dock = QDockWidget(name, self)
+        dock.setWidget(widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
+        self._dock_widgets[name] = dock
 
-    def load_snapshot_action(self) -> None:
-        name = input("Load snapshot name: ")
-        try:
-            snap = load_snapshot(self._store, name)
-        except Exception as exc:  # pragma: no cover - UI feedback
-            print(f"Load failed: {exc}")
-            return
-        print(f"Loaded snapshot: {name} (tick={snap.get('meta', {}).get('tick')})")
+    def show_panel(self, name: str) -> None:
+        """Ensure the panel ``name`` is created and visible."""
+
+        if name not in self._dock_widgets:
+            widget = self._registry.create(name)
+            self.add_panel(name, widget)
+        dock = self._dock_widgets[name]
+        dock.show()
+        dock.raise_()
