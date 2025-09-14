@@ -1,34 +1,41 @@
+"""Widget registry mapping ids to builder functions.
+
+This registry allows containers to construct widgets by identifier, keeping
+layout concerns separate from widget implementations (M12).
+"""
+
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Dict
+from typing import Callable, Dict, List
 
-from PySide6.QtWidgets import QWidget
+from ui.widgets.battery_panel import build as build_battery
+from ui.widgets.life_panel import build as build_life
+from ui.widgets.power_panel import build as build_power
+
+from .contracts import Widget
+
+WidgetBuilder = Callable[[], Widget]
+
+_REGISTRY: Dict[str, WidgetBuilder] = {}
 
 
-class WidgetRegistry:
-    """Registry mapping names to widget factories.
+def register(widget_id: str, builder: WidgetBuilder) -> None:
+    """Register ``builder`` under ``widget_id``."""
+    _REGISTRY[widget_id] = builder
 
-    Widgets register themselves with a factory callable returning a ``QWidget``.
-    ``create`` instantiates a widget by name, raising ``KeyError`` if unknown.
-    """
 
-    def __init__(self) -> None:
-        self._factories: Dict[str, Callable[[], QWidget]] = {}
+def build(widget_id: str) -> Widget | None:
+    """Construct a widget by ``widget_id`` if registered."""
+    factory = _REGISTRY.get(widget_id)
+    return factory() if factory else None
 
-    def register(self, name: str, factory: Callable[[], QWidget]) -> None:
-        """Register a factory under ``name``.
 
-        If ``name`` already exists it is overwritten.
-        """
+def ids() -> List[str]:
+    """Return a sorted list of registered widget IDs."""
+    return sorted(_REGISTRY)
 
-        self._factories[name] = factory
 
-    def create(self, name: str) -> QWidget:
-        """Create a widget by ``name``.
-
-        Raises ``KeyError`` if the name is not registered.
-        """
-
-        factory = self._factories[name]
-        return factory()
+# Register built-in widgets
+register("power", build_power)
+register("battery", build_battery)
+register("life", build_life)
