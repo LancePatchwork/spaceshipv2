@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from copy import deepcopy
 import random
-
+from copy import deepcopy
 from typing import cast
 
-from .types import BatteryState, LifeSupportState, PowerplantState, SRSState
 from engine.lib.contracts import SNAPSHOT_SCHEMA, SRS_VERSION, Snapshot
+
+from .types import BatteryState, LifeSupportState, PowerplantState, SRSState
 
 
 def make_initial_state() -> SRSState:
