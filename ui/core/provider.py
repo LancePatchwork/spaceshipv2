@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from typing import cast
 
 from engine.lib.contracts import Snapshot, SnapshotSource
 
@@ -33,3 +34,13 @@ class PollingSnapshotProvider:
             self._cached = self._source.get_latest()
             self._last_poll_ms = now_ms
         return self._cached
+
+
+class SnapshotProviderAdapter:
+    """Adapt a :class:`PollingSnapshotProvider` to the UI protocol."""
+
+    def __init__(self, provider: PollingSnapshotProvider) -> None:
+        self._provider = provider
+
+    def get_latest(self) -> dict[str, object] | None:
+        return cast(dict[str, object] | None, self._provider.get_latest())
