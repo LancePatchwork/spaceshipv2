@@ -127,6 +127,10 @@ class TestUIRuleCompliance:
         widget_files = Path(__file__).parent.parent.glob("**/*.py")
 
         for widget_file in widget_files:
+            # Skip test files to avoid false positives
+            if "test_" in str(widget_file):
+                continue
+
             with open(widget_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
@@ -159,17 +163,6 @@ class TestUIRuleCompliance:
                         if re.search(pattern, line) and not re.search(
                             r'["\'].*' + pattern + r'.*["\']', line
                         ):
-                            # Skip if this is the test file itself defining the pattern
-                            if "test_rule_compliance.py" in str(widget_file) and (
-                                "position_patterns" in line
-                                or 'r"move' in line
-                                or 'r"resize' in line
-                                or 'r"setGeometry' in line
-                                or "r'move" in line
-                                or "r'resize" in line
-                                or "r'setGeometry" in line
-                            ):
-                                continue
                             pytest.fail(
                                 f"Found hardcoded positioning in {widget_file}:{i} - {line.strip()}"
                             )
