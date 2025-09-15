@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import time
-import warnings
 from datetime import datetime
 from typing import Any, Literal
 
@@ -31,7 +30,7 @@ class Event(BaseModel):
     type: str
     ts_ms: int = Field(default_factory=utc_ms_now)
     issuer: str | None = None
-    audience_scope: list[str] = Field(default_factory=list)
+    audience_scope: list[str] = Field(default_factory=list, validate_default=True)
     category: str | None = None
     priority: int = 50
     max_request_priority: int | None = None
@@ -79,9 +78,17 @@ class Event(BaseModel):
 
     @field_validator("audience_scope")
     @classmethod
-    def _warn_empty_audience(cls, v: list[str]) -> list[str]:
+    def _validate_audience_scope(cls, v: list[str]) -> list[str]:
         if not v:
-            warnings.warn("Event audience_scope is empty")
+            raise ValueError(
+                "Event audience_scope cannot be empty - events without audience scope "
+                "will never be routed to any actors and will remain stuck in 'queued' state. "
+                "This indicates a bug in event creation. "
+                "Valid audience scopes include: 'shipwide', 'officers', 'captain', "
+                "'department:<name>', 'private:<actor_id>', 'rank:<name>', 'crew:<role>'. "
+                "Use 'shipwide' for events that should be visible to all actors, "
+                "or specify appropriate department/role scopes."
+            )
         return v
 
     def append_audit(

@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\tools\scenario.py
+# hypothesis_version: 6.138.16
+
+[0.0, 1.0, 10.0, 100.0, 1000, '--crew-awake', '--out', '--steps', '.tmp', '__main__', 'battery_kw', 'crew_awake', 'life', 'meta', 'plant_online', 'power', 'schema', 'state', 'tick', 'ts_ms', 'version', 'w']

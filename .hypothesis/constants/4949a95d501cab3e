@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m11_persist\json_store.py
+# hypothesis_version: 6.138.16
+
+['.tmp', '^[A-Za-z0-9_-]+$', 'invalid snapshot', 'meta', 'state', 'w']

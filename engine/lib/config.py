@@ -1,4 +1,3 @@
-
 # NOTE: Placeholder comment for integration testing
 
 from dataclasses import dataclass

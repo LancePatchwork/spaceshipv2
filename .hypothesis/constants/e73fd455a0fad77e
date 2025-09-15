@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m02_events\factories.py
+# hypothesis_version: 6.138.16
+
+['actor_id', 'alerts', 'alerts.red', 'auto_stations', 'boarders', 'collision', 'combat', 'crew.sleep', 'crew_admin', 'critical', 'duration_s', 'engineering', 'life_support', 'location', 'make_red_alert_event', 'make_repair_event', 'make_sleep_event', 'minor', 'officers', 'reason', 'serious', 'severity', 'shipwide', 'system_id', 'task.repair']

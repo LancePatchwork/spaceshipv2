@@ -44,3 +44,32 @@ def test_missing_file(tmp_path: Path) -> None:
     store = JsonSaveStore(Paths(saves_dir=str(tmp_path)))
     with pytest.raises(FileNotFoundError):
         store.load("does_not_exist")
+
+
+def test_invalid_snapshot_format(tmp_path: Path) -> None:
+    """Test loading invalid snapshot format to cover line 62."""
+    store = JsonSaveStore(Paths(saves_dir=str(tmp_path)))
+
+    # Create a file with invalid JSON structure
+    invalid_file = tmp_path / "invalid.json"
+    with invalid_file.open("w") as f:
+        f.write('{"invalid": "structure"}')  # Missing "meta" and "state"
+
+    with pytest.raises(ValueError, match="invalid snapshot"):
+        store.load("invalid")
+
+
+def test_save_cleanup_on_error(tmp_path: Path, sample_snap: Snapshot) -> None:
+    """Test that temporary files are cleaned up on save error (line 54)."""
+    from unittest.mock import patch
+
+    store = JsonSaveStore(Paths(saves_dir=str(tmp_path)))
+
+    # Mock os.replace to raise an exception, forcing cleanup path
+    with patch("os.replace", side_effect=OSError("Mock error")):
+        with pytest.raises(OSError):
+            store.save(sample_snap, name="test")
+
+    # Verify no temporary files are left behind
+    temp_files = list(tmp_path.glob("*.tmp"))
+    assert len(temp_files) == 0, "Temporary files should be cleaned up"

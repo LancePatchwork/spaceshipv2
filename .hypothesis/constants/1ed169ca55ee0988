@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\ui\core\binding.py
+# hypothesis_version: 6.138.16
+
+[0.0, 'battery', 'capacity_kw', 'crew_awake', 'kw', 'life', 'life_temp_c', 'meta', 'o2_pct', 'plant_kw', 'plant_max_kw', 'power', 'ship_temp_c', 'state', 'tick', 'ts_ms']

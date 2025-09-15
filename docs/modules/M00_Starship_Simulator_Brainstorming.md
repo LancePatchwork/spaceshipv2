@@ -189,7 +189,7 @@ A realistic starship simulator where you start as a frigate captain and rise thr
 - **Supply Chain**: Dependencies between different resource types and systems
 
 ### Ship Resources & Materials Simplified for MVP Fuel, spareparts, supplies, medical supplies, ammo.
-- **Fuel Types**: 
+- **Fuel Types**:
   - **Fusion Fuel**: Deuterium, tritium, helium-3 for main reactors
   - **Chemical Fuel**: Hydrogen, oxygen for maneuvering thrusters
   - **Antimatter**: High-energy fuel for advanced propulsion (rare/expensive)

@@ -7,12 +7,12 @@
 ## Final Overview (MVP)
 - **Data fidelity**: SI units; mandatory source metadata (citation, year, quality A–E) for every row; theoretical entries flagged with an anchor and rule.
 - **Schema**: adds toughness, E/G moduli, melting/boiling, latent heats, and laser reflectivity bands (0.5, 1.06, 10.6 µm).
-- **Computed ratings**: 
+- **Computed ratings**:
   - **BR (RHAe mm)** for slugs; calibrated so RHA steel maps 1:1, with toughness/hardness scaling and ceramic front‑loading.
   - **LR (MJ/m²)** for lasers; provides **time‑to‑burn‑through**; non‑perforating beams inject absorbed **heat** to M04.
   - **XR (0–100)** for blasts; foam/aerogel bonuses; anchored to scaled‑distance behavior.
 - **Vulnerability profiles**: externals (radiators, engine bells, PDCs, antennae, louvers, exposed lines) map to stacks + failure hooks so “sniping” behaves sensibly.
-- **Integration hooks**: 
+- **Integration hooks**:
   - To **M04 Thermal**: absorbed laser power → `ThermalAlertEvent` + heat load; ablation when thresholds reached.
   - To **M02 Events**: repair/scram/checklist signals on damage; selective SRS wake by resource kind.
   - To **M01 SRS**: severed lines emit `SRSAlert:*` (power/heat/fluids/data), enabling reroutes and hardlinks.
@@ -23,9 +23,9 @@
 ---
 
 ## 1) Scope
-- Use **real data first** (handbooks, vendor datasheets, peer‑reviewed papers). Extrapolate only when needed; mark `is_theoretical:true` with an anchor and method.  
-- Define **canonical properties** (mechanical, thermal, optical, radiation, cost) with **source metadata & quality grades**.  
-- Provide **computed ratings** for MVP: **Ballistic (BR)**, **Laser (LR)**, **Explosion (XR)** to keep combat fast while plausible.  
+- Use **real data first** (handbooks, vendor datasheets, peer‑reviewed papers). Extrapolate only when needed; mark `is_theoretical:true` with an anchor and method.
+- Define **canonical properties** (mechanical, thermal, optical, radiation, cost) with **source metadata & quality grades**.
+- Provide **computed ratings** for MVP: **Ballistic (BR)**, **Laser (LR)**, **Explosion (XR)** to keep combat fast while plausible.
 - Describe **Armor Stacks** (layered composites) and how to compute effective properties.
 
 ---
@@ -86,10 +86,10 @@ All inputs in **SI**: Pa, kg/m³, W/m·K, J/kg·K, K; optics at **λ = 1.06 µm*
 ```
 
 **Effective properties** (per stack):
-- **Mass/area**: Σ `density × thickness`.  
-- **Thermal**: series/parallel approximations (M04 will pull `k`, `c`, `emissivity`).  
-- **Ballistic**: §3.1.  
-- **Laser**: §3.2.  
+- **Mass/area**: Σ `density × thickness`.
+- **Thermal**: series/parallel approximations (M04 will pull `k`, `c`, `emissivity`).
+- **Ballistic**: §3.1.
+- **Laser**: §3.2.
 - **Explosion**: §3.3.
 
 ---
@@ -98,23 +98,23 @@ All inputs in **SI**: Pa, kg/m³, W/m·K, J/kg·K, K; optics at **λ = 1.06 µm*
 > Collapse complex physics into scalars for fast combat. Calibrate constants with **real anchor points** (RHA steel, Al‑Li sheet, B4C tile).
 
 ### 3.1 Ballistic Rating (BR → RHAe mm)
-- **Model** (Lambert–Jonas/Okun‑style collapse):  
-  `BR_mm = Σ (K_b(material) × thickness_m × f_hardness × f_toughness × sqrt(yield_strength_Pa / 1e9)) × 1000`  
-  where `f_hardness = 1 + (hardness_HB − 200)/600`, `f_toughness = clamp(fracture_toughness/50, 0.6, 1.4)`.  
+- **Model** (Lambert–Jonas/Okun‑style collapse):
+  `BR_mm = Σ (K_b(material) × thickness_m × f_hardness × f_toughness × sqrt(yield_strength_Pa / 1e9)) × 1000`
+  where `f_hardness = 1 + (hardness_HB − 200)/600`, `f_toughness = clamp(fracture_toughness/50, 0.6, 1.4)`.
 - **Calibration**: choose `K_b` so **RHA steel** maps to `1 mm → 1 mm RHAe`; ceramics 1.3–1.5× (front‑load only first layer), Ti ~0.85×, composites ~0.6×.
 
 ### 3.2 Laser Rating (LR → MJ/m²)
 - **Interpretation**: lasers are **heat at a focal point**. If they **don’t** perforate, absorbed power becomes **ship heat** → M04.
-- **Lumped enthalpy model**:  
-  `H_eff = c·(T_m−T_0) + L_f + η_v·L_v`  
-  `LR_MJ_m2 = (ρ · H_eff · thickness_m) / (1 − R_λ) ÷ 1e6 · Φ(k)`  
+- **Lumped enthalpy model**:
+  `H_eff = c·(T_m−T_0) + L_f + η_v·L_v`
+  `LR_MJ_m2 = (ρ · H_eff · thickness_m) / (1 − R_λ) ÷ 1e6 · Φ(k)`
   with `R_λ = reflectivity_laser[1.06um]`, `η_v` ≈ 0–0.2 (metals), 0.2–0.6 (ablators/ceramics), and **conduction penalty** `Φ(k)` (1.0–1.5) increasing with thermal conductivity.
 - **Time‑to‑burn‑through** for a beam `{P, spot_d}`: `t ≈ (LR_MJ_m2 × A_spot) / P_MJ_s` (emit `ThermalAlertEvent` with `heat_kW = P·(1−R_λ)` while heating).
 
 ### 3.3 Explosion Rating (XR → 0..100)
-- **Goal**: standoff/blast attenuation proxy.  
-- **Model**: Hopkinson–Cranz scaling → simple stack:  
-  `XR = clamp( Σ (explosion_resistance × thickness_m × 1000) + foam_bonus, 0, 100 )`  
+- **Goal**: standoff/blast attenuation proxy.
+- **Model**: Hopkinson–Cranz scaling → simple stack:
+  `XR = clamp( Σ (explosion_resistance × thickness_m × 1000) + foam_bonus, 0, 100 )`
   with `foam_bonus = +5 per 10 mm` of aerogel/foam layers. Calibrate to steel plates at common scaled distances.
 
 **Build‑time**: store `BR_mm`, `LR_MJ_m2`, `XR_0_100` and constants used (`K_b`, `Φ`).
@@ -141,8 +141,8 @@ All inputs in **SI**: Pa, kg/m³, W/m·K, J/kg·K, K; optics at **λ = 1.06 µm*
 ---
 
 ## 5) Armor Stack Examples
-- **Ceramic‑Metal‑Foam** (b4c + Ti + aerogel): good against slugs & lasers; ok vs blasts.  
-- **Carbide‑Steel** (WC + Maraging): extreme KE resistance; heavy; weak thermal response.  
+- **Ceramic‑Metal‑Foam** (b4c + Ti + aerogel): good against slugs & lasers; ok vs blasts.
+- **Carbide‑Steel** (WC + Maraging): extreme KE resistance; heavy; weak thermal response.
 - **Ablator‑Composite** (ablative + CFRP): great vs lasers; poor vs KE unless thick.
 
 ### 5.5 Component Vulnerability Profiles (targets that “make sense” to snipe)
@@ -165,33 +165,33 @@ All inputs in **SI**: Pa, kg/m³, W/m·K, J/kg·K, K; optics at **λ = 1.06 µm*
 ---
 
 ## 6) Interfaces
-- **M03 Geometry**: pulls densities & thickness for mass/area; no effect on inner volume.  
-- **M04 Thermal**: uses `k(T)`, `c(T)`, ε, Tm, Tb, and latent heats to convert laser absorption into **transient heat** and possible ablation.  
-- **M09 Combat**: reads `BR/LR/XR` + **vulnerability profiles**.  
+- **M03 Geometry**: pulls densities & thickness for mass/area; no effect on inner volume.
+- **M04 Thermal**: uses `k(T)`, `c(T)`, ε, Tm, Tb, and latent heats to convert laser absorption into **transient heat** and possible ablation.
+- **M09 Combat**: reads `BR/LR/XR` + **vulnerability profiles**.
 - **M11 Data**: versioned schemas; material packs moddable; sources stored alongside materials.
 
 ---
 
 ## 7) Acceptance Criteria (MVP)
-1) Every material row includes **source metadata** and a **quality grade**; unit tests reject missing/invalid units.  
-2) Armor stacks precompute `BR_mm`, `LR_MJ_m2`, `XR_0_100`; changing thickness or layer order updates them.  
-3) Given a beam `{P, d}`, the system reports **time‑to‑burn‑through** for a target stack and emits a `ThermalAlertEvent` with locus/heat input to M04/M02 while heating.  
-4) Kinetic hits scale plausibly with density/yield/toughness (e.g., WC outperforms Al‑Li for BR at equal thickness).  
+1) Every material row includes **source metadata** and a **quality grade**; unit tests reject missing/invalid units.
+2) Armor stacks precompute `BR_mm`, `LR_MJ_m2`, `XR_0_100`; changing thickness or layer order updates them.
+3) Given a beam `{P, d}`, the system reports **time‑to‑burn‑through** for a target stack and emits a `ThermalAlertEvent` with locus/heat input to M04/M02 while heating.
+4) Kinetic hits scale plausibly with density/yield/toughness (e.g., WC outperforms Al‑Li for BR at equal thickness).
 5) All *theoretical* entries are flagged and list an anchor material used for extrapolation.
 
 ---
 
 ## 8) Data Sourcing & QA
-- **Primary sources**: materials handbooks, MatWeb/vendor datasheets, peer‑reviewed papers.  
-- **Per‑row metadata mandatory**: citation, year, source type, quality grade (A=handbook/paper consensus, B=vendor datasheet, C=single paper, D=estimate, E=theoretical).  
-- **Sanity checks**: unit tests validate unit ranges (`k`, `c`, Tm, Tb); cross‑check density×volume vs mass budgets.  
-- **Extrapolation rules**: any `is_theoretical:true` entry must list an **anchor** material and the rule used (e.g., Ti alloy +10% yield, −20% k).  
+- **Primary sources**: materials handbooks, MatWeb/vendor datasheets, peer‑reviewed papers.
+- **Per‑row metadata mandatory**: citation, year, source type, quality grade (A=handbook/paper consensus, B=vendor datasheet, C=single paper, D=estimate, E=theoretical).
+- **Sanity checks**: unit tests validate unit ranges (`k`, `c`, Tm, Tb); cross‑check density×volume vs mass budgets.
+- **Extrapolation rules**: any `is_theoretical:true` entry must list an **anchor** material and the rule used (e.g., Ti alloy +10% yield, −20% k).
 - **Laser bands**: default **1.06 µm**; optional **0.5 µm** and **10.6 µm** if provided.
 
 ---
 
 ## 9) Cutlines
-- No wavelength‑by‑wavelength laser model in MVP; single 1.06 µm band + optional 0.5/10.6 µm entries.  
-- No full transient heat diffusion; **lumped enthalpy** + conduction penalty Φ for perforation time.  
-- No ductile failure micromodel; BR uses calibrated heuristic.  
+- No wavelength‑by‑wavelength laser model in MVP; single 1.06 µm band + optional 0.5/10.6 µm entries.
+- No full transient heat diffusion; **lumped enthalpy** + conduction penalty Φ for perforation time.
+- No ductile failure micromodel; BR uses calibrated heuristic.
 - No TNT chemistry; XR uses scaled distance calibration.

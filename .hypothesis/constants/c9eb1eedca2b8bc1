@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m02_events\constants.py
+# hypothesis_version: 6.138.16
+
+['CATEGORIES', 'Category', 'SCOPES', 'Scope', 'alerts', 'bridge', 'captain', 'comms', 'crew:<role>', 'crew_admin', 'damage_control', 'department:bridge', 'department:medical', 'department:ops', 'department:security', 'engineering', 'environment', 'medical', 'navigation', 'officers', 'ops', 'private:<actor_id>', 'rank:<name>', 'security', 'shipwide']

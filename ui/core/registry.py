@@ -6,13 +6,16 @@ layout concerns separate from widget implementations (M12).
 
 from __future__ import annotations
 
-from typing import Callable, Dict, List
+from typing import TYPE_CHECKING, Callable, Dict, List
 
 from ui.widgets.battery_panel import build as build_battery
 from ui.widgets.life_panel import build as build_life
 from ui.widgets.power_panel import build as build_power
 
 from .contracts import Widget
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
 
 WidgetBuilder = Callable[[], Widget]
 
@@ -24,10 +27,14 @@ def register(widget_id: str, builder: WidgetBuilder) -> None:
     _REGISTRY[widget_id] = builder
 
 
-def build(widget_id: str) -> Widget | None:
+def build(widget_id: str) -> QWidget | None:
     """Construct a widget by ``widget_id`` if registered."""
     factory = _REGISTRY.get(widget_id)
-    return factory() if factory else None
+    if factory:
+        from typing import cast
+
+        return cast(QWidget, factory())
+    return None
 
 
 def ids() -> List[str]:

@@ -7,12 +7,12 @@
 ## Final Overview (MVP)
 - **Data fidelity**: SI units; mandatory source metadata (citation, year, quality A–E) for every row; theoretical entries flagged with an anchor and rule.
 - **Schema**: adds toughness, E/G moduli, melting/boiling, latent heats, and laser reflectivity bands (0.5, 1.06, 10.6 µm).
-- **Computed ratings**: 
+- **Computed ratings**:
   - **BR (RHAe mm)** for slugs; calibrated so RHA steel maps 1:1, with toughness/hardness scaling and ceramic front‑loading.
   - **LR (MJ/m²)** for lasers; provides **time‑to‑burn‑through**; non‑perforating beams inject absorbed **heat** to M04.
   - **XR (0–100)** for blasts; foam/aerogel bonuses; anchored to scaled‑distance behavior.
 - **Vulnerability profiles**: externals (radiators, engine bells, PDCs, antennae, louvers, exposed lines) map to stacks + failure hooks so “sniping” behaves sensibly.
-- **Integration hooks**: 
+- **Integration hooks**:
   - To **M04 Thermal**: absorbed laser power → `ThermalAlertEvent` + heat load; ablation when thresholds reached.
   - To **M02 Events**: repair/scram/checklist signals on damage; selective SRS wake by resource kind.
   - To **M01 SRS**: severed lines emit `SRSAlert:*` (power/heat/fluids/data), enabling reroutes and hardlinks.
@@ -44,11 +44,11 @@
 ---
 
 ## 3) Deck Pitch & Ceiling (service plenum)
-- **Fixed headroom** `h_clear = 3.0 m` on every deck.  
-- **Size plenum thickness** `t_ceiling` (structure + service plenum + insulation):  
-  tiny **0.32** | light **0.42** | medium **0.60** | heavy **0.75** | capital **0.95** | dread **1.15** (meters).  
+- **Fixed headroom** `h_clear = 3.0 m` on every deck.
+- **Size plenum thickness** `t_ceiling` (structure + service plenum + insulation):
+  tiny **0.32** | light **0.42** | medium **0.60** | heavy **0.75** | capital **0.95** | dread **1.15** (meters).
 - **Deck pitch** `p_deck = h_clear + t_ceiling`.
-- **Corridor reserve** `f_corr = 0.20` (15–25% allowed).  
+- **Corridor reserve** `f_corr = 0.20` (15–25% allowed).
 - **Riser spacing**: shafts at corridor intersections, ~every **20 m** in plan; ≥ **2** per deck.
 
 ---
@@ -57,8 +57,8 @@
 - **Frame spacing (base)** `s_frame_base` (m): tiny **1.0**, light **1.2**, medium **1.5**, heavy **2.0**, capital **3.0**, dread **4.0**.
 - **Longerons** `n_long`: tiny **8**, light **12**, medium **16**, heavy **24**, capital **32**, dread **48**.
 - **Acceleration thickness floor** `t_accel_floor = α_size · a_max_g` with `α_size` (m/g): tiny **0.006**, light **0.008**, medium **0.012**, heavy **0.018**, capital **0.024**, dread **0.030**.
-- **Effective frame spacing (ties to g)**: reduce spacing for higher sustained g:  
-  `s_frame_eff = s_frame_base × clamp( (2.0 / a_max_g)^0.5, 0.70, 1.20 )`  
+- **Effective frame spacing (ties to g)**: reduce spacing for higher sustained g:
+  `s_frame_eff = s_frame_base × clamp( (2.0 / a_max_g)^0.5, 0.70, 1.20 )`
   (≤30% tighter for hard‑burn ships; exported to mass budget, not geometry.)
 - **Pressure hull thickness** is computed in M03 (thin‑shell + safety factors) then `max`’d with `t_accel_floor`.
 
@@ -68,24 +68,24 @@
 > Profiles set sensible defaults across modules. They’re **flavorful presets**, not hard canon: tweak per ship or mission.
 
 ### 5.1 Expanse‑like (Hard‑Burn Frigate)
-- **Target size**: medium_vessel.  
-- **Acceleration**: `a_max_g = 3.5 g` sustained; **emergency** `a_burst_g = 8 g` for ≤ 30 s (affects Event/crew systems and frame mass budget via `s_frame_eff`, not geometry thickness).  
-- **Structure**: use `α_size` from §4; recommend `FoS_material = 1.6`, `FoS_design = 1.30`.  
-- **Thermal posture**: radiator area bias **+20–30%** vs baseline; SRS priority: **heat → power → life support → engines → refinery** under overtemp.  
+- **Target size**: medium_vessel.
+- **Acceleration**: `a_max_g = 3.5 g` sustained; **emergency** `a_burst_g = 8 g` for ≤ 30 s (affects Event/crew systems and frame mass budget via `s_frame_eff`, not geometry thickness).
+- **Structure**: use `α_size` from §4; recommend `FoS_material = 1.6`, `FoS_design = 1.30`.
+- **Thermal posture**: radiator area bias **+20–30%** vs baseline; SRS priority: **heat → power → life support → engines → refinery** under overtemp.
 - **Armor**: moderate; favor **sloped** external geometry; `t_armor` modest, rely on maneuver + DC.
 
 ### 5.2 BSG‑like (Armor‑Heavy Battlestar)
-- **Target size**: capital_vessel or dreadnought_vessel.  
-- **Acceleration**: `a_max_g = 2.0 g` sustained; **burst** up to `5 g` ≤ 10 s.  
-- **Structure**: higher frame mass; recommend `FoS_material = 1.8`, `FoS_design = 1.35`.  
-- **Thermal posture**: internal heat batteries (hull/armor) favored; radiator exposure conservative.  
+- **Target size**: capital_vessel or dreadnought_vessel.
+- **Acceleration**: `a_max_g = 2.0 g` sustained; **burst** up to `5 g` ≤ 10 s.
+- **Structure**: higher frame mass; recommend `FoS_material = 1.8`, `FoS_design = 1.35`.
+- **Thermal posture**: internal heat batteries (hull/armor) favored; radiator exposure conservative.
 - **Armor**: heavy layered stacks (M05), high `t_armor`, large keep‑outs for flight decks.
 
 ### 5.3 Hauler (Bulk Freighter)
-- **Target size**: heavy_vessel.  
-- **Acceleration**: `a_max_g = 0.5 g` sustained; **no** high‑g bursts.  
-- **Structure**: light frames; recommend `FoS_material = 1.4`, `FoS_design = 1.20`.  
-- **Thermal posture**: oversized radiators when stationary; minimal during cruise.  
+- **Target size**: heavy_vessel.
+- **Acceleration**: `a_max_g = 0.5 g` sustained; **no** high‑g bursts.
+- **Structure**: light frames; recommend `FoS_material = 1.4`, `FoS_design = 1.20`.
+- **Thermal posture**: oversized radiators when stationary; minimal during cruise.
 - **Armor**: minimal; rely on convoy/escorts.
 
 **Applying a profile** sets: `a_max_g`, recommended safety factors, radiator/armor bias hints for M04/M05, and doctrine defaults for event checklists (`thermal_overtemp`, `reactor_scram_response`).
@@ -93,7 +93,7 @@
 ---
 
 ## 6) Module Surface‑Area Budgets (per deck)
-- Packing uses **usable floor area** `A_use_k` from M03.  
+- Packing uses **usable floor area** `A_use_k` from M03.
 - A **rule of thumb** for planning: reserve **30–40%** of `A_use_k` for machinery modules (power, engines, refinery), **20–30%** for life support & utilities, **20–30%** for crew/cargo, remainder for buffers/egress. Tune per ship.
 
 ---
@@ -104,14 +104,13 @@
 ---
 
 ## 8) Acceptance Criteria (MVP)
-1) Selecting a **profile** and **size** produces a consistent parameter set (deck pitch, structural floors, riser spacing) that M03 can solve without warnings.  
-2) Increasing from Hauler → Expanse‑like raises `a_max_g` and increases computed `t_struct_final`, reducing deck count for a fixed outer hull size.  
+1) Selecting a **profile** and **size** produces a consistent parameter set (deck pitch, structural floors, riser spacing) that M03 can solve without warnings.
+2) Increasing from Hauler → Expanse‑like raises `a_max_g` and increases computed `t_struct_final`, reducing deck count for a fixed outer hull size.
 3) Changing **size** changes `t_ceiling`, frame spacing, and longeron count accordingly. `t_ceiling`, frame spacing, and longeron count accordingly.
 
 ---
 
 ## 9) Cutlines
-- No per‑bay local reinforcements in MVP; global defaults only.  
-- Radiator/armor **biases** are hints; detailed thermal/armor sizing happens in M04/M05.  
+- No per‑bay local reinforcements in MVP; global defaults only.
+- Radiator/armor **biases** are hints; detailed thermal/armor sizing happens in M04/M05.
 - Profiles are **non‑IP** homages; numbers are gameplay‑driven, not licensed stats.
-

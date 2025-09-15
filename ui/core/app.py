@@ -26,4 +26,4 @@ def run_app(make_window: Callable[[], QMainWindow]) -> int:
     app = create_app()
     window = make_window()
     window.show()
-    return app.exec()
+    return int(app.exec())

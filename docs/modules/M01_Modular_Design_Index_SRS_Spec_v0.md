@@ -33,17 +33,17 @@
 ---
 
 ## Module Map & Status
-- **M01 SRS (Ship Resource Service)** — **Status: Frozen (v0.2)** — spec below.  
-- **M02 Event System** — queue model, categories, audience scopes, preemption, audit log. *Next up.*  
-- **M03 Geometry & Layout** — ellipsoid, deck count, corridor graph, placement constraints.  
-- **M04 Thermal & Radiation** — heat as resource, Stefan–Boltzmann, material states.  
-- **M05 Materials & Armor DB** — schema + starter materials; armor stacks.  
-- **M06 Ship Sizes & Decking** — size categories; deck height rules; surface‑area budgets.  
-- **M07 Mining/Refining Loop** — subsystem behavior, ore/ingot IO, contracts, price drift.  
-- **M08 Crew & AI** — MVP (no needs beyond Life Support); behavior through Events.  
-- **M09 Combat MVP** — engagements, damage routing, "hard to kill" hulks policy.  
-- **M10 UI Dashboards** — data‑dense Aurora‑style dashboards and explainers.  
-- **M11 Data & Persistence** — schemas, save compatibility, modding hooks.  
+- **M01 SRS (Ship Resource Service)** — **Status: Frozen (v0.2)** — spec below.
+- **M02 Event System** — queue model, categories, audience scopes, preemption, audit log. *Next up.*
+- **M03 Geometry & Layout** — ellipsoid, deck count, corridor graph, placement constraints.
+- **M04 Thermal & Radiation** — heat as resource, Stefan–Boltzmann, material states.
+- **M05 Materials & Armor DB** — schema + starter materials; armor stacks.
+- **M06 Ship Sizes & Decking** — size categories; deck height rules; surface‑area budgets.
+- **M07 Mining/Refining Loop** — subsystem behavior, ore/ingot IO, contracts, price drift.
+- **M08 Crew & AI** — MVP (no needs beyond Life Support); behavior through Events.
+- **M09 Combat MVP** — engagements, damage routing, "hard to kill" hulks policy.
+- **M10 UI Dashboards** — data‑dense Aurora‑style dashboards and explainers.
+- **M11 Data & Persistence** — schemas, save compatibility, modding hooks.
 - **M12 Production** — milestones, risks, telemetry.
 
 ---
@@ -64,9 +64,9 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 
 ### 3. Core Concepts & Types (minimal forms)
 - **ResourceType**: `{ id, kind }` where `kind ∈ { power, heat, fluid, atmo, solid, data }`.
-- **Port**: `{ id, module_id, direction: input|output|bidirectional, resource_type_id, rate_max, max_request_priority }`  
+- **Port**: `{ id, module_id, direction: input|output|bidirectional, resource_type_id, rate_max, max_request_priority }`
   *`max_request_priority` caps how “high” this port may bid for a resource (prevents a refinery from stealing shield power unless overridden by officers/captain).*
-- **Module (Node)**: `{ id, name, surface_area_m2, mass_kg, ports[], controller_ref, storages?[] }`  
+- **Module (Node)**: `{ id, name, surface_area_m2, mass_kg, ports[], controller_ref, storages?[] }`
   Storage (batteries, tanks, cargo) is **module‑level**, not per‑port.
 - **Flow (record)**: `{ resource_type_id, source_port_id, sink_port_id, rate_actual }` for the last committed tick.
 - **HardlinkPolicy (table, MVP)**: external config keyed by `resource_type_id` → `{ allowed: bool }`. Defaults: **power=true, data=true, heat=false** (fluids TBD).
@@ -83,7 +83,7 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 ### 5. Built‑In Behaviors
 - **Powerplant**: exposes `output:Power (kW)` limited by core temp (via M04) and fuel feed (fluid input). Can blackstart batteries.
 - **Battery/Capacitor**: `input:Power`, `output:Power`, buffers (kWh). Brownout logic: shed low‑priority loads.
-- **Life Support**: `input:Power`, `input:Waste`, `output:Water (L/s)`, `output:Air (kg/s)`. Air goes to **Interior Reservoir** (virtual tank with hull‑volume bound). Consumption drain: `crew_count × air_rate`.  
+- **Life Support**: `input:Power`, `input:Waste`, `output:Water (L/s)`, `output:Air (kg/s)`. Air goes to **Interior Reservoir** (virtual tank with hull‑volume bound). Consumption drain: `crew_count × air_rate`.
   **Interior Reservoir Capacity Rule**: size storage for **12–24 hours** of maximum crew usage, but cap total LS storage footprint to **≤ 1/3 of Life Support module space**.
 - **Mining Rig**: `output:Ore (kg/s)`; heat/power as additional inputs/outputs.
 - **Refinery**: `input:Ore (kg/s)`, `output:Ingots (kg/s)`, `byproduct:Heat (kW)`; conversion efficiency + latency.
@@ -117,7 +117,7 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 ```
 
 ### 7. Interfaces
-- **To M02 (Events)** — *emits*: `SRSUpdate`, `SRSAlert`, `FlowCommitted`, `SRSState`.  
+- **To M02 (Events)** — *emits*: `SRSUpdate`, `SRSAlert`, `FlowCommitted`, `SRSState`.
   *consumes*: `Order:SetModuleThrottle`, `Order:SetPortEnabled`, `Order:SetMaxRequestPriority`, `Order:OverridePriority` (scoped, TTL), `Order:PlaceHardlink`, `Order:RemoveHardlink`.
 - **To M03 (Geometry)**: requests trunk lengths/keep‑outs if/when geometry costs are enabled (post‑MVP); MVP ignores geometry.
 - **To M04 (Thermal)**: queries layer temperatures; publishes heat dumps; receives radiator capacity updates.
@@ -149,13 +149,13 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 ### 11. Sleep/Wake & Caching (Performance)
 - **Quiescence detector**: if all module storages and port allocations change by < **ε = 1% of port `rate_max`** for **≥ 3 s**, SRS **sleeps**.
 - **Active window**: on wake, run solver for **≥ 5 s** before checking quiescence again.
-- **Wake triggers** (MVP):  
-  1) `Order:*` affecting modules/ports/priorities/throttles.  
-  2) **Power state changes**: generation loss/restore; battery low/high thresholds.  
-  3) **Storage thresholds**: any storage crosses low/high watermarks.  
+- **Wake triggers** (MVP):
+  1) `Order:*` affecting modules/ports/priorities/throttles.
+  2) **Power state changes**: generation loss/restore; battery low/high thresholds.
+  3) **Storage thresholds**: any storage crosses low/high watermarks.
   4) **Module topology**: install/remove/enable/disable; damage/repair.
-  5) **Critical Alerts**: Red Alert; Life Support Critical; Reactor Hot.  
-  6) **Flight profile**: throttle changes; docking/undocking; entering/exiting hazards.  
+  5) **Critical Alerts**: Red Alert; Life Support Critical; Reactor Hot.
+  6) **Flight profile**: throttle changes; docking/undocking; entering/exiting hazards.
   7) **Hardlink** placement/removal/failure.
 - **Cache**: last stable allocations per resource are cached; on wake, re‑seed from cache to reduce convergence time.
 - **Life Support background drain**: while sleeping, LS decrements reservoir by expected consumption; dropping below thresholds triggers a wake + `SRSAlert`.
@@ -166,8 +166,8 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 - **Policy**: governed by **HardlinkPolicy** (MVP: power ✅, data ✅, heat ❌, fluids TBD). Created via `Order:PlaceHardlink` and removed via `Order:RemoveHardlink`.
 - **Priority**: hardlinks default to a **high request cap** (subject to override) so they can bypass low-priority throttling.
 - **Deterioration & Failure**:
-  - Maintain a scalar **wear** in [0,∞). Increment each tick as:  
-    `wear += (rate_actual / rate_max)^1.5 * (dt / base_life_seconds)` with `base_life_seconds ≈ 3.5 h` at 100% utilization.  
+  - Maintain a scalar **wear** in [0,∞). Increment each tick as:
+    `wear += (rate_actual / rate_max)^1.5 * (dt / base_life_seconds)` with `base_life_seconds ≈ 3.5 h` at 100% utilization.
     When `wear ≥ 1.0` → failure; emit `SRSAlert: HardlinkFailed`.
   - **Usage‑sensitivity**: a shield hardlink at near‑max rate fails **much faster** than a kitchen hardlink at idle.
   - Pre‑failure warning at `wear ≥ 0.8`.
@@ -191,4 +191,3 @@ A **resource‑agnostic flow system** that auto‑wires module inputs/outputs at
 ### 14. Notes & Cutlines
 - **MVP** ignores network topology and losses entirely; all gating is at ports. Geometry costs may be enabled post‑MVP.
 - **Jitter/latency for data** are out of scope for MVP.
-

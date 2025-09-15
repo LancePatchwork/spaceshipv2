@@ -34,3 +34,21 @@ def test_repair_factory() -> None:
     assert ev.audience_scope == ["department:engineering", "officers"]
     assert ev.payload["system_id"] == "sys42"
     assert ev.payload["severity"] == "critical"
+    assert "location" not in ev.payload  # No location provided
+
+
+def test_repair_factory_with_location() -> None:
+    """Test repair factory with location parameter to cover line 43."""
+    ev = make_repair_event("sys42", location="deck_3", severity="minor")
+    assert ev.priority == 40
+    assert ev.category == "engineering"
+    assert ev.audience_scope == ["department:engineering", "officers"]
+    assert ev.payload["system_id"] == "sys42"
+    assert ev.payload["severity"] == "minor"
+    assert ev.payload["location"] == "deck_3"  # Location should be included
+
+
+def test_sleep_factory_negative_duration() -> None:
+    """Test sleep factory with negative duration to cover lines 23-25."""
+    with pytest.raises(ValueError, match="duration_s must be non-negative"):
+        make_sleep_event("actor1", -5)

@@ -233,4 +233,3 @@ def get_snapshot():
 - Docking grid + resize spec for tiles.
 - Generator for event enums + pydantic models from a single source.
 - Unit handling (`pint` vs light conventions).
-

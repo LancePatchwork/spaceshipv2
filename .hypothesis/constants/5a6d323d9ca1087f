@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m02_events\__init__.py
+# hypothesis_version: 6.138.16
+
+['CATEGORIES', 'Category', 'Event', 'EventQueue', 'SCOPES', 'Scope', 'SubscriptionBroker', 'check_claim_ttl', 'effective_priority', 'make_red_alert_event', 'make_repair_event', 'make_sleep_event', 'new_ulid', 'should_preempt']

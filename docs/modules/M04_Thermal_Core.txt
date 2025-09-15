@@ -78,7 +78,7 @@ For a module `i`:
 
 ```
 P_in   = Σ_k G_{k→i} · (T_k − T_i) + Q_active_i (from SRS loads)
-P_out  = 0 (local radiation ignored)       
+P_out  = 0 (local radiation ignored)
 ΔQ     = (P_in − P_out) · Δt     // kJ
 T_i(t+Δ) = T_i(t) + ΔQ / C_i
 ```

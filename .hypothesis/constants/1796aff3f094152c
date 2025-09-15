@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m02_events\subscriptions.py
+# hypothesis_version: 6.138.16
+
+['SubscriptionBroker', 'active', 'claim', 'claimed', 'done', 'invalid state', 'queued', 'shipwide', 'suspend', 'suspended']

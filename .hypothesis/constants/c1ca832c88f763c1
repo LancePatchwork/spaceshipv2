@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m02_events\scheduling.py
+# hypothesis_version: 6.138.16
+
+[120, 1000, 'AGING_S', 'MIN_PRIORITY', 'STEP_S', 'SubscriptionBroker', 'action', 'check_claim_ttl', 'claim', 'claim_timeout', 'claimed', 'effective_priority', 'officers', 'queued', 'should_preempt', 'system', 'ts']

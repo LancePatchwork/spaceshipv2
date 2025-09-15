@@ -1,0 +1,4 @@
+# file: C:\Users\Lance Patchwork\Desktop\Spaceship Simulator\spaceshipv2\engine\m01_srs\solver.py
+# hypothesis_version: 6.138.16
+
+[-50.0, 0.0, 0.025, 0.05, 0.1, 5.0, 10.0, 20.0, 21.0, 22.0, 50.0, 100.0, 'battery', 'capacity_kw', 'crew_awake', 'env', 'kw', 'life', 'max_charge_kw', 'max_discharge_kw', 'max_kw', 'meta', 'o2_pct', 'online', 'output_kw', 'plant', 'power', 'schema', 'ship_temp_c', 'state', 'temp_c', 'tick', 'ts_ms', 'version']

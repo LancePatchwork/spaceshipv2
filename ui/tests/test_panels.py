@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtWidgets import QApplication  # type: ignore[import-not-found]
+from PySide6.QtWidgets import QApplication
 
 from ui.core.contracts import BatteryVM, LifeVM, PowerVM
 from ui.widgets.battery_panel import BatteryPanel
@@ -14,7 +14,7 @@ def app() -> QApplication:
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
-    return app
+    return app  # type: ignore[return-value]
 
 
 def test_power_panel_updates_labels(app: QApplication) -> None:
@@ -46,3 +46,45 @@ def test_life_panel_updates_labels(app: QApplication) -> None:
     assert panel._life_temp.text() == "Life Temp: 22.2 °C"
     assert panel._ship_temp.text() == "Ship Temp: 20.8 °C"
     assert panel._crew.text() == "Crew Awake: 4"
+
+
+def test_battery_panel_name(app: QApplication) -> None:
+    """Test BatteryPanel name method to cover line 41."""
+    panel = BatteryPanel()
+    assert panel.name() == "Battery"
+
+
+def test_battery_panel_build(app: QApplication) -> None:
+    """Test BatteryPanel build function to cover lines 50-52."""
+    from ui.widgets.battery_panel import build
+
+    widget = build()
+    assert isinstance(widget, BatteryPanel)
+
+
+def test_power_panel_name(app: QApplication) -> None:
+    """Test PowerPanel name method to cover line 41."""
+    panel = PowerPanel()
+    assert panel.name() == "Power"
+
+
+def test_power_panel_build(app: QApplication) -> None:
+    """Test PowerPanel build function to cover lines 50-52."""
+    from ui.widgets.power_panel import build
+
+    widget = build()
+    assert isinstance(widget, PowerPanel)
+
+
+def test_life_panel_name(app: QApplication) -> None:
+    """Test LifePanel name method to cover line 45."""
+    panel = LifePanel()
+    assert panel.name() == "Life"
+
+
+def test_life_panel_build(app: QApplication) -> None:
+    """Test LifePanel build function to cover lines 56-58."""
+    from ui.widgets.life_panel import build
+
+    widget = build()
+    assert isinstance(widget, LifePanel)
