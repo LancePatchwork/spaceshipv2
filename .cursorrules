@@ -1,0 +1,381 @@
+# Cursor AI Development Rules
+# Comprehensive quality and workflow guidelines for the Starship Simulator project
+
+## 🚨 CRITICAL RULES - NEVER VIOLATE
+
+### ⚠️ BATCH OPERATIONS - EXTREME CAUTION
+- **NEVER use scripts for batch work** unless explicitly told to do so
+- **NEVER perform blanket deletions** across the codebase
+- **ALWAYS ask for confirmation** before any mass operations
+- **ALWAYS show what will be affected** before executing batch changes
+- **NEVER assume scope** - Be extremely conservative with pattern matching
+- **ALWAYS test on a small subset first** before applying to entire codebase
+- **✅ Scripts to IDENTIFY issues are OK** - Analysis, scanning, reporting
+- **❌ Scripts that CHANGE code at large are FORBIDDEN** - Never without explicit permission
+
+### Testing & Quality Assurance
+- **NEVER skip pre-commit hooks** - Always run `pre-commit run --all-files` before committing
+- **NEVER use `--no-verify` or `--skip-hooks`** - Fix issues properly instead
+- **ALWAYS run tests** before making changes: `pytest` or `python -m pytest`
+- **ALWAYS maintain 95%+ test coverage** - Add tests for any new functionality
+- **NEVER commit broken tests** - Fix failing tests before committing
+
+### 🚨 TEST INTEGRITY - CRITICAL RULES
+- **NEVER weaken tests to make them pass** - This renders tests useless
+- **NEVER add exceptions to rule compliance tests** unless the exception is legitimate
+- **NEVER skip files in compliance tests** (e.g., `if file.name.startswith('test_'): continue`)
+- **NEVER allow broad exceptions** that make tests meaningless
+- **ALWAYS fix the underlying issue** instead of weakening the test
+- **ALWAYS make tests stricter over time** - Never more lenient
+- **NEVER use `# type: ignore` in tests** unless testing the ignore itself
+- **NEVER skip test files** in compliance checks - Test files must also follow rules
+- **ALWAYS validate that exceptions are legitimate** - Not just convenient
+- **NEVER create loopholes** that hide real violations
+- **ALWAYS prefer false positives** over false negatives in compliance tests
+- **NEVER make tests "pass" by making them less effective**
+
+### Code Quality
+- **NEVER ignore mypy errors** - Fix type issues properly, don't use `# type: ignore` unless absolutely necessary
+- **NEVER ignore linting errors** - Fix ruff/black issues before committing
+- **ALWAYS use proper type hints** - No `Any` types unless absolutely required
+- **NEVER use `print()` for debugging** - Use `structlog` or proper logging
+
+## 📋 WORKFLOW RULES
+
+### Git Workflow
+- **ALWAYS create feature branches** for non-trivial changes: `git checkout -b feature/description`
+- **ALWAYS write descriptive commit messages** following conventional commits:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `test:` for test additions/changes
+  - `refactor:` for code refactoring
+  - `docs:` for documentation
+  - `chore:` for maintenance tasks
+- **NEVER force push to main** - Use `--force-with-lease` only on feature branches
+
+### Development Process
+- **ALWAYS run `pre-commit install`** when setting up the project
+- **ALWAYS test locally** before pushing to remote
+
+## 🏗️ ARCHITECTURE & DESIGN
+
+### Module Organization
+- **ALWAYS follow the M01-M13 module structure** as defined in docs/
+- **NEVER mix concerns** - Keep engine, UI, and tools separate
+- **ALWAYS use dependency injection** - Don't create hard dependencies between modules
+- **ALWAYS use protocols/interfaces** - Define contracts in `contracts.py` files
+
+### Code Structure
+- **ALWAYS use pure functions** in the engine - No side effects
+- **ALWAYS use immutable data structures** where possible
+- **ALWAYS separate business logic from UI logic**
+- **NEVER put business logic in UI components**
+
+## 📝 NAMING CONVENTIONS
+
+### Files & Directories
+- **Use snake_case** for all files: `event_queue.py`, `main_window.py`
+- **Use descriptive names**: `test_m02_queue_capacity.py` not `test_queue.py`
+- **Use module prefixes** for tests: `test_m02_*` for M02 module tests
+- **Use consistent directory structure**: `engine/m01_srs/`, `ui/widgets/`
+
+### Functions & Variables
+- **Use snake_case** for functions: `publish_event()`, `get_latest_snapshot()`
+- **Use descriptive names**: `check_claim_ttl()` not `check_ttl()`
+- **Use verb-noun pattern** for functions: `create_event()`, `update_state()`
+- **Use noun pattern** for variables: `event_queue`, `snapshot_data`
+
+### Classes
+- **Use PascalCase** for classes: `EventQueue`, `SubscriptionBroker`
+- **Use descriptive names**: `PollingSnapshotProvider` not `Provider`
+- **Use consistent suffixes**: `*Panel` for UI panels, `*Provider` for data providers
+
+### Constants
+- **Use UPPER_SNAKE_CASE**: `MAX_QUEUE_SIZE`, `DEFAULT_TICK_HZ`
+- **Group related constants** in `constants.py` files
+- **Use descriptive names**: `CATEGORIES` not `CATS`
+
+## 🔧 TECHNICAL STANDARDS
+
+### Python Code
+- **Use Python 3.12+ features** - Type hints, match statements, etc.
+- **Use f-strings** for string formatting: `f"Event {event.id} published"`
+- **Use pathlib** for file paths: `Path("data/saves")`
+- **Use dataclasses** for simple data structures
+- **Use Pydantic models** for complex data validation
+- **Use Result[T, E] pattern** for operations that can fail (Ok/Err)
+- **Use structured logging** with `structlog` or JSON formatter
+- **Use ULIDs** for unique identifiers (time-ordered, globally unique)
+
+### Type Hints
+- **ALWAYS use type hints** for function parameters and return values
+- **Use `from __future__ import annotations`** for forward references
+- **Use `typing.Protocol`** for interfaces
+- **Use `typing.Union` or `|`** for union types: `str | None`
+- **Use `typing.Callable`** for function types
+
+### Error Handling
+- **Use `Result[T, E]` pattern** for operations that can fail
+- **Use specific exception types** - Don't use bare `except:`
+- **Use `pytest.raises()`** in tests to verify exceptions
+- **Log errors with context** using `structlog`
+- **Never raise exceptions across worker/process boundaries**
+- **Use atomic operations** for state updates (thread-safe)
+
+### Testing
+- **Write tests for all public functions**
+- **Use property-based testing** with Hypothesis for complex logic
+- **Use descriptive test names**: `test_publish_event_without_audience_scope_raises_error`
+- **Use fixtures** for common test data
+- **Test edge cases** and error conditions
+- **Test determinism** - Compare snapshot hashes with FP tolerance
+- **Use seeded RNGs** for reproducible tests
+- **Test event chains** - post→effect→spawn integration
+- **Test persistence round-trip** - Save/load compatibility
+
+### Test Quality Principles
+- **Tests must be strict and effective** - Never weaken them to make them pass
+- **Compliance tests must catch violations** - False positives are better than false negatives
+- **Test files must follow the same rules** - No exceptions for test code
+- **Exceptions must be explicitly justified** - Document why each exception is needed
+- **Tests should get stricter over time** - Never more lenient
+- **Fix the underlying issue** - Don't work around it in tests
+- **Prefer failing tests over useless tests** - A failing test tells you something
+- **Compliance tests are security** - They protect code quality
+- **Test effectiveness over test convenience** - Quality matters more than ease
+
+## 🎨 UI/UX STANDARDS
+
+### Qt/PySide6
+- **Use proper Qt layouts** - Don't hardcode positions
+- **Use signals and slots** for communication
+- **Use proper widget hierarchy** - Don't create orphaned widgets
+- **Use consistent styling** - Define themes in CSS/QSS files
+- **Widget registry defines behavior** - Windows are containers only
+- **All behavior/data in backend widgets** - Not in containers
+- **Use atomic snapshot updates** - UI reads last committed snapshot
+- **Performance budget: ≤4ms avg frame** - Log spikes
+
+### User Experience
+- **Provide clear error messages** to users
+- **Use loading indicators** for long operations
+- **Use consistent terminology** across the UI
+- **Follow accessibility guidelines** - Proper labels, keyboard navigation
+- **Single QSS theme file** - No hardcoded colors in widgets
+- **Keyboard focus visible** - Context menus close with Esc
+- **Drag handles large enough** - Accessibility compliance
+
+## 📚 DOCUMENTATION
+
+### Code Documentation
+- **Write docstrings** for all public functions and classes
+- **Use Google-style docstrings** with Args, Returns, Raises sections
+- **Document complex algorithms** with inline comments
+- **Keep comments up-to-date** with code changes
+
+### API Documentation
+- **Document all public APIs** in module `__init__.py` files
+- **Use type hints** as documentation
+- **Provide usage examples** in docstrings
+- **Document breaking changes** in commit messages
+
+## 🔍 CODE REVIEW CHECKLIST
+
+Before committing, verify:
+- [ ] All tests pass
+- [ ] Pre-commit hooks pass
+- [ ] Type hints are complete and correct
+- [ ] No `# type: ignore` comments (unless justified)
+- [ ] No `print()` statements
+- [ ] Proper error handling
+- [ ] Documentation is updated
+- [ ] Commit message follows conventional format
+- [ ] No hardcoded values (use constants)
+- [ ] No TODO comments in production code
+
+## 🚀 PERFORMANCE & OPTIMIZATION
+
+### General Principles
+- **Profile before optimizing** - Don't guess what's slow
+- **Use appropriate data structures** - Lists vs sets vs dicts
+- **Avoid premature optimization** - Write clear code first
+- **Use async/await** for I/O operations
+- **Use generators** for large datasets
+
+### Memory Management
+- **Avoid memory leaks** - Properly close files, connections
+- **Use context managers** - `with` statements
+- **Be mindful of object lifecycle** - Don't hold references unnecessarily
+
+## 🛡️ SECURITY
+
+### General Security
+- **Never commit secrets** - Use environment variables
+- **Validate all inputs** - Use Pydantic for data validation
+- **Use proper file permissions** - Don't make files world-writable
+- **Sanitize user input** - Prevent injection attacks
+
+### Data Handling
+- **Use secure random** for IDs and tokens
+- **Validate file paths** - Prevent directory traversal
+- **Use proper serialization** - Don't use `pickle` for untrusted data
+
+## 📊 MONITORING & DEBUGGING
+
+### Logging
+- **Use structured logging** with `structlog`
+- **Log at appropriate levels** - DEBUG, INFO, WARNING, ERROR
+- **Include context** in log messages - User ID, request ID, etc.
+- **Don't log sensitive data** - Passwords, tokens, etc.
+
+### Debugging
+- **Use proper debugging tools** - `pdb`, IDE debuggers
+- **Add temporary logging** for complex issues
+- **Use `pytest --pdb`** for test debugging
+- **Profile performance issues** with `cProfile`
+
+## 🔄 CONTINUOUS INTEGRATION
+
+### CI/CD Pipeline
+- **All tests must pass** in CI before merging
+- **Code coverage must be maintained** at 99%+
+- **All linting checks must pass**
+- **Type checking must pass**
+- **Security scans must pass**
+
+### Deployment
+- **Use semantic versioning** for releases
+- **Tag releases** in Git
+- **Document breaking changes** in release notes
+- **Test in staging** before production
+- **Atomic write operations** - tmp → fsync → rename
+- **Per-chunk checksums** - Refuse partial loads
+- **Module version keys** - m01_version, m12_version, etc.
+- **Migration support** - Handle schema changes gracefully
+
+## 🎯 PROJECT-SPECIFIC RULES
+
+### Starship Simulator Specific
+- **Follow M01-M13 module architecture** strictly
+- **Use deterministic simulation** - Same inputs = same outputs
+- **Use proper event system** - All state changes through events
+- **Follow UI widget-driven architecture** - M12 specification
+
+### Module Dependencies
+- **M01 (SRS)** - Core resource system (FROZEN v0.2)
+- **M02 (Events)** - Event system and queue (FROZEN v0.2)
+- **M03-M11** - Specialized modules (geometry, thermal, etc.)
+- **M12 (UI)** - Widget-driven UI architecture (FROZEN v0)
+- **M13** - Engineering conventions (this file)
+
+### Critical Module Requirements
+- **M01 SRS**: Use SI units only (kW, L/s, kg/s, m, m², m³, K)
+- **M01 SRS**: Port names must include units: `*_W`, `*_Lps`, `*_kgps`, `*_m`, `*_m2`, `*_m3`, `*_K`
+- **M01 SRS**: Storage buffers: 12-24 hours max throughput, ≤1/3 module space
+- **M02 Events**: Use ULIDs for event IDs, seeded PRNG for tie-breakers
+- **M02 Events**: Priority: lower number = higher priority (0 critical, 90+ low)
+- **M02 Events**: State machine: queued → routed → claimed → active → done
+- **M12 UI**: Widget registry defines behavior, windows are containers only
+- **M12 UI**: All behavior/data in backend widgets, not in containers
+
+## 🚫 ANTI-PATTERNS - NEVER DO THESE
+
+### Code Anti-Patterns
+- **Don't use global variables** - Use dependency injection
+- **Don't use mutable default arguments** - Use `None` and assign in function
+- **Don't use bare `except:`** - Catch specific exceptions
+- **Don't use `eval()` or `exec()`** - Security risk
+- **Don't use `import *`** - Explicit imports only
+- **Don't use magic numbers** - Use named constants
+- **Don't use long parameter lists** - Use dataclasses or config objects
+- **Don't use deep inheritance** - Prefer composition
+- **Don't use mutable data in tests** - Use fixtures
+- **Don't commit debug code** - Remove `print()`, `pdb.set_trace()`, etc.
+
+### 🚨 TEST ANTI-PATTERNS - CRITICAL VIOLATIONS
+- **🚨 NEVER weaken tests to make them pass** - This destroys test value
+- **🚨 NEVER add broad exceptions to compliance tests** - Makes tests useless
+- **🚨 NEVER skip test files in compliance checks** - Test files must follow rules too
+- **🚨 NEVER use `if file.name.startswith('test_'): continue`** - This hides violations
+- **🚨 NEVER allow "convenient" exceptions** - Only legitimate technical exceptions
+- **🚨 NEVER make tests more lenient over time** - Always stricter, never weaker
+- **🚨 NEVER create loopholes in rule enforcement** - This defeats the purpose
+- **🚨 NEVER prefer "passing tests" over "effective tests"** - Quality over convenience
+- **🚨 NEVER add exceptions without explicit justification** - Document why exception is needed
+- **🚨 NEVER make compliance tests "pass" by making them less strict** - Fix the real issue
+
+### Batch Operation Anti-Patterns
+- **🚨 NEVER use batch scripts for mass changes** - This has destroyed entire codebases before
+- **🚨 NEVER perform blanket deletions** - Always be surgical and precise
+- **🚨 NEVER assume what should be deleted** - Ask for explicit confirmation
+
+## 📞 EMERGENCY PROCEDURES
+
+### When Things Go Wrong
+1. **Don't panic** - Take a deep breath
+2. **Check git status** - See what's changed
+3. **Run tests** - Identify what's broken
+4. **Use git bisect** - Find the problematic commit
+5. **Create a hotfix branch** - Don't work directly on main
+6. **Test thoroughly** - Don't rush fixes
+7. **Document the issue** - Help future developers
+
+### Recovery Commands
+```bash
+# Undo last commit (keep changes)
+git reset --soft HEAD~1
+
+# Undo last commit (discard changes)
+git reset --hard HEAD~1
+
+# Revert a specific commit
+git revert <commit-hash>
+
+# Check what changed
+git log --oneline -10
+git diff HEAD~1
+```
+
+---
+
+## 📖 QUICK REFERENCE
+
+### Essential Commands
+```bash
+# Setup
+pre-commit install
+pip install -e .
+
+# Development
+pytest                    # Run tests
+mypy engine/ ui/         # Type check
+ruff check .             # Lint
+black .                  # Format
+pre-commit run --all-files  # Run all checks
+
+# Git workflow
+git checkout -b feature/description
+git add .
+git commit -m "feat: description"
+git push origin feature/description
+```
+
+### File Structure
+```
+engine/           # Core simulation logic
+├── m01_srs/      # Ship Resource Service
+├── m02_events/   # Event system
+├── lib/          # Shared utilities
+└── tests/        # Engine tests
+
+ui/               # User interface
+├── core/         # UI framework
+├── widgets/      # UI components
+├── windows/      # Window layouts
+└── tests/        # UI tests
+
+tools/            # Development tools
+docs/             # Documentation
+```
+
+Remember: **Quality over speed**. It's better to take time to do it right than to rush and create technical debt.

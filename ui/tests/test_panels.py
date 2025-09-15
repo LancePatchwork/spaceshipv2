@@ -14,7 +14,7 @@ def app() -> QApplication:
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
-    return app  # type: ignore[return-value]
+    return app
 
 
 def test_power_panel_updates_labels(app: QApplication) -> None:

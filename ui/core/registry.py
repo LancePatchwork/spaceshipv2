@@ -16,6 +16,8 @@ from .contracts import Widget
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
+else:
+    from PySide6.QtWidgets import QWidget
 
 WidgetBuilder = Callable[[], Widget]
 
