@@ -1,3 +1,11 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Test coverage and cache files
+.coverage
+.pytest_cache/
+.hypothesis/
+
+# Hash cache files (local testing only)
+*.hash
