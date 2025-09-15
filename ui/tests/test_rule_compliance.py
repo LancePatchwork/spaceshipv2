@@ -162,6 +162,9 @@ class TestUIRuleCompliance:
                             # Skip if this is the test file itself defining the pattern
                             if "test_rule_compliance.py" in str(widget_file) and (
                                 "position_patterns" in line
+                                or 'r"move' in line
+                                or 'r"resize' in line
+                                or 'r"setGeometry' in line
                                 or "r'move" in line
                                 or "r'resize" in line
                                 or "r'setGeometry" in line
